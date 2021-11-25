@@ -110,7 +110,7 @@ uint32_t is_it_sampled(uint32_t set)
 void update_sampler(uint32_t cpu, uint32_t s_idx, uint64_t address, uint64_t ip, uint8_t type)
 {
     SAMPLER_class *s_set = sampler[s_idx];
-    uint64_t tag = address / (64*LLC_SET); 
+    uint64_t tag = address / (64*LLC_SET);   // Q: tag indicates memory address
     int match = -1;
 
     // check hit
@@ -165,7 +165,7 @@ void update_sampler(uint32_t cpu, uint32_t s_idx, uint64_t address, uint64_t ip,
         {
             if (s_set[match].lru == (SAMPLER_WAY-1)) // Sampler uses LRU replacement
             {
-                if (s_set[match].used == 0)
+                if (s_set[match].used == 0)   // eviction
                 {
                     uint32_t SHCT_idx = s_set[match].ip % SHCT_PRIME;
                     if (SHCT[cpu][SHCT_idx].counter < SHCT_MAX)
