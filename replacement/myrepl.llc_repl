@@ -49,7 +49,7 @@ public:
     uint32_t counter;
 
     SHCT_class() {
-        counter = 0;
+        counter = 4;
     };
 };
 SHCT_class SHCT[NUM_CPUS][SHCT_SIZE];
@@ -261,6 +261,7 @@ void CACHE::llc_update_replacement_state(uint32_t cpu, uint32_t set, uint32_t wa
         update_sampler(cpu, s_idx, full_addr, pc, type);
 
     if (hit)
+        // promotion
         rrpv[set][way] = 0;
     else {
         // SHIP prediction
@@ -270,9 +271,17 @@ void CACHE::llc_update_replacement_state(uint32_t cpu, uint32_t set, uint32_t wa
         if (SHCT_idx >= SHCT_PRIME)
             assert(0);
 
-        rrpv[set][way] = maxRRPV-1;
-        if (SHCT[cpu][SHCT_idx].counter == SHCT_MAX)
+        // insertion
+        if(SHCT[cpu][SHCT_idx].counter < 2){
+            rrpv[set][way] = 0;
+        }else if(SHCT[cpu][SHCT_idx].counter >= 2 && SHCT[cpu][SHCT_idx].counter < 4){
+            rrpv[set][way] = 1;
+        }else if(SHCT[cpu][SHCT_idx].counter >= 4 && SHCT[cpu][SHCT_idx].counter < 6){
+            rrpv[set][way] = 2;
+        }else{
             rrpv[set][way] = maxRRPV;
+        }
+
     }
 }
 
