@@ -8,8 +8,8 @@
 #define SAMPLER_SET (256*NUM_CPUS)
 #define SAMPLER_WAY LLC_WAY
 #define SHCT_MAX 7
-#define DIVISION 2          // division between protected and probationary segment
-#define EPSILON 0.03125f    // BIP parameter: 1/32 probability
+#define DIVISION 3          // division between protected and probationary segment
+#define EPSILON 0.03125f    // BIP parameter: probability of promoting to MRU
 
 uint32_t rrpv[LLC_SET][LLC_WAY];
 int bound;                  // boundary between protected and probationary segment
@@ -49,7 +49,7 @@ public:
     uint32_t counter;
 
     SHCT_class() {
-        counter = 4;
+        counter = SHCT_MAX / 2;
     };
 };
 SHCT_class SHCT[NUM_CPUS][SHCT_SIZE];
@@ -127,8 +127,9 @@ void update_sampler(uint32_t cpu, uint32_t s_idx, uint64_t address, uint64_t pc,
         if (s_set[match].valid && (s_set[match].tag == tag))
         {
             uint32_t SHCT_idx = s_set[match].pc % SHCT_PRIME;
-            if (SHCT[cpu][SHCT_idx].counter > 0)
+            if (SHCT[cpu][SHCT_idx].counter > 0 && s_set[match].used == 0){
                 SHCT[cpu][SHCT_idx].counter--;
+            }
 
             s_set[match].type = type;
             s_set[match].used = 1;

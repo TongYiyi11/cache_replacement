@@ -44,12 +44,18 @@ def get_tracelis(directory):
     return tracelis
 
 
-def plot_data(lru_map, ship_map, myrepl_map):
-    df = pd.DataFrame([lru_map, ship_map, myrepl_map], index=["lru", "ship", "myrepl"]).transpose()
-    fig, ax = plt.subplots(1, 1, figsize=(6, 5))
-    df.plot.bar(ax=ax, fontsize=12, rot=0, color={"lru": [152 / 255.0, 223 / 255.0, 238 / 255.0],
-                                                  "ship": [114 / 255.0, 158 / 255.0, 206 / 255.0],
-                                                  "myrepl": [173 / 255.0, 139 / 255.0, 201 / 255.0]})
+def plot_data(lru_map, ship_map, myrepl_map, speedup):
+    if speedup == 1:
+        df = pd.DataFrame([ship_map, myrepl_map], index=["ship", "comb"]).transpose()
+        fig, ax = plt.subplots(1, 1, figsize=(6, 5))
+        df.plot.bar(ax=ax, fontsize=12, color={"ship": [114 / 255.0, 158 / 255.0, 206 / 255.0],
+                                                "comb": [173 / 255.0, 139 / 255.0, 201 / 255.0]})
+    else:
+        df = pd.DataFrame([lru_map, ship_map, myrepl_map], index=["lru", "ship", "comb"]).transpose()
+        fig, ax = plt.subplots(1, 1, figsize=(6, 5))
+        df.plot.bar(ax=ax, fontsize=12, color={"lru": [152 / 255.0, 223 / 255.0, 238 / 255.0],
+                                                "ship": [114 / 255.0, 158 / 255.0, 206 / 255.0],
+                                                "comb": [173 / 255.0, 139 / 255.0, 201 / 255.0]})
     fig.tight_layout()
     fig.show()
 
@@ -61,16 +67,26 @@ def prep_df(df, name):
     return df
 
 
-def plot_data_multicore(lru_map_lis, ship_map_lis, myrepl_map_lis, tracelis):
+def plot_data_multicore(lru_map_lis, ship_map_lis, myrepl_map_lis, speedup):
     # prepare df
-    df0 = pd.DataFrame([lru_map_lis[0], ship_map_lis[0], myrepl_map_lis[0]],
-                       index=["lru", "ship", "myrepl"]).transpose()
-    df1 = pd.DataFrame([lru_map_lis[1], ship_map_lis[1], myrepl_map_lis[1]],
-                       index=["lru", "ship", "myrepl"]).transpose()
-    df2 = pd.DataFrame([lru_map_lis[2], ship_map_lis[2], myrepl_map_lis[2]],
-                       index=["lru", "ship", "myrepl"]).transpose()
-    df3 = pd.DataFrame([lru_map_lis[3], ship_map_lis[3], myrepl_map_lis[3]],
-                       index=["lru", "ship", "myrepl"]).transpose()
+    if speedup == 1:
+        df0 = pd.DataFrame([ship_map_lis[0], myrepl_map_lis[0]],
+                           index=["ship", "comb"]).transpose()
+        df1 = pd.DataFrame([ship_map_lis[1], myrepl_map_lis[1]],
+                           index=["ship", "comb"]).transpose()
+        df2 = pd.DataFrame([ship_map_lis[2], myrepl_map_lis[2]],
+                           index=["ship", "comb"]).transpose()
+        df3 = pd.DataFrame([ship_map_lis[3], myrepl_map_lis[3]],
+                           index=["ship", "comb"]).transpose()
+    else:
+        df0 = pd.DataFrame([lru_map_lis[0], ship_map_lis[0], myrepl_map_lis[0]],
+                           index=["lru", "ship", "comb"]).transpose()
+        df1 = pd.DataFrame([lru_map_lis[1], ship_map_lis[1], myrepl_map_lis[1]],
+                           index=["lru", "ship", "comb"]).transpose()
+        df2 = pd.DataFrame([lru_map_lis[2], ship_map_lis[2], myrepl_map_lis[2]],
+                           index=["lru", "ship", "comb"]).transpose()
+        df3 = pd.DataFrame([lru_map_lis[3], ship_map_lis[3], myrepl_map_lis[3]],
+                           index=["lru", "ship", "comb"]).transpose()
 
     df0 = prep_df(df0, 'Core1')
     df1 = prep_df(df1, 'Core2')
@@ -111,8 +127,9 @@ def plot_data_multicore(lru_map_lis, ship_map_lis, myrepl_map_lis, tracelis):
 
 if __name__ == "__main__":
 
-    directory = "./results_10M/"
-    multicore = 0
+    directory = "./results_4core_10M/"
+    multicore = 1
+    speedup = 1
 
     # list of trace data name
     tracelis = get_tracelis(directory)
@@ -161,9 +178,23 @@ if __name__ == "__main__":
                 elif algo == "myrepl":
                     myrepl_map[trace] = ipc
 
+    # compute speedup
+    if speedup == 1:
+        if multicore == 1:
+            for i in range(0, 4):
+                for trace in tracelis:
+                    ship_map_lis[i][trace] = (ship_map_lis[i][trace] -
+                                              lru_map_lis[i][trace]) / lru_map_lis[i][trace] * 100
+                    myrepl_map_lis[i][trace] = (myrepl_map_lis[i][trace] -
+                                              lru_map_lis[i][trace]) / lru_map_lis[i][trace] * 100
+        else:
+            for trace in tracelis:
+                ship_map[trace] = (ship_map[trace] - lru_map[trace]) / lru_map[trace] * 100
+                myrepl_map[trace] = (myrepl_map[trace] - lru_map[trace]) / lru_map[trace] * 100
+
     # plot data
     if multicore == 1:
-        plot_data_multicore(lru_map_lis, ship_map_lis, myrepl_map_lis, tracelis)
+        plot_data_multicore(lru_map_lis, ship_map_lis, myrepl_map_lis, speedup)
     else:
-        plot_data(lru_map, ship_map, myrepl_map)
+        plot_data(lru_map, ship_map, myrepl_map, speedup)
 
