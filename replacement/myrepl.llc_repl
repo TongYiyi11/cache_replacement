@@ -5,7 +5,7 @@
 #define maxRRPV 3
 #define SHCT_SIZE  16384
 #define SHCT_PRIME 16381
-#define SAMPLER_SET (256*NUM_CPUS)
+#define SAMPLER_SET 256*NUM_CPUS
 #define SAMPLER_WAY LLC_WAY
 #define SHCT_MAX 7
 #define DIVISION 3          // division between protected and probationary segment

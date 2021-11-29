@@ -2,7 +2,8 @@ import os
 import matplotlib.pyplot as plt
 import pandas as pd
 import altair as alt
-import numpy as np
+import altair_saver
+import sys
 
 alt.renderers.enable('altair_viewer')
 
@@ -29,7 +30,7 @@ def read_result_multicore(directory, filename):
     return ipc_lis
 
 
-def get_tracelis(directory):
+def get_tracelis(directory, multicore):
     tracelis = []
     for filename in os.listdir(directory):
         if filename.endswith(".txt"):
@@ -44,7 +45,7 @@ def get_tracelis(directory):
     return tracelis
 
 
-def plot_data(lru_map, ship_map, myrepl_map, speedup):
+def plot_data(lru_map, ship_map, myrepl_map, speedup, filename):
     if speedup == 1:
         df = pd.DataFrame([ship_map, myrepl_map], index=["ship", "comb"]).transpose()
         fig, ax = plt.subplots(1, 1, figsize=(6, 5))
@@ -58,6 +59,8 @@ def plot_data(lru_map, ship_map, myrepl_map, speedup):
                                                 "comb": [173 / 255.0, 139 / 255.0, 201 / 255.0]})
     fig.tight_layout()
     fig.show()
+    fig.savefig(filename)
+    plt.close(fig)
 
 
 def prep_df(df, name):
@@ -67,7 +70,7 @@ def prep_df(df, name):
     return df
 
 
-def plot_data_multicore(lru_map_lis, ship_map_lis, myrepl_map_lis, speedup):
+def plot_data_multicore(lru_map_lis, ship_map_lis, myrepl_map_lis, speedup, outfile):
     # prepare df
     if speedup == 1:
         df0 = pd.DataFrame([ship_map_lis[0], myrepl_map_lis[0]],
@@ -122,17 +125,42 @@ def plot_data_multicore(lru_map_lis, ship_map_lis, myrepl_map_lis, speedup):
         labelFontSize=15,
         titleFontSize=15,
     )
+    altair_saver.save(chart, outfile)
     chart.show()
 
 
-if __name__ == "__main__":
+def average_speedup(map):
+    sum = 0
+    count = 0
+    for k in map.keys():
+        v = map[k]
+        if v > 0.4 and k != "libquantum_964B":
+            count += 1
+            sum += v
+            print(v)
+    avg = sum / count
+    return avg
 
-    directory = "./results_4core_10M/"
-    multicore = 1
+
+def main():
+    # print command line arguments
+    if len(sys.argv) < 4:
+        print("Illegal number of parameters \n")
+        print("Usage: python3 ./plot.py [dir] [multicore_flag] [outfile_path]")
+        exit(1)
+
+    directory = sys.argv[1]
+    multicore = int(sys.argv[2])
+    outfile = sys.argv[3]
+
     speedup = 1
 
+    # directory = "./results_10M/"
+    # multicore = 0
+    # speedup = 1
+
     # list of trace data name
-    tracelis = get_tracelis(directory)
+    tracelis = get_tracelis(directory, multicore)
     tracelis.sort()
 
     # initialization
@@ -186,15 +214,25 @@ if __name__ == "__main__":
                     ship_map_lis[i][trace] = (ship_map_lis[i][trace] -
                                               lru_map_lis[i][trace]) / lru_map_lis[i][trace] * 100
                     myrepl_map_lis[i][trace] = (myrepl_map_lis[i][trace] -
-                                              lru_map_lis[i][trace]) / lru_map_lis[i][trace] * 100
+                                                lru_map_lis[i][trace]) / lru_map_lis[i][trace] * 100
         else:
             for trace in tracelis:
                 ship_map[trace] = (ship_map[trace] - lru_map[trace]) / lru_map[trace] * 100
                 myrepl_map[trace] = (myrepl_map[trace] - lru_map[trace]) / lru_map[trace] * 100
 
+    # ship_avg = average_speedup(ship_map)
+    # print("average ship: " + str(ship_avg))
+    # myrepl_avg = average_speedup(myrepl_map)
+    # print("average myrepl: " + str(myrepl_avg))
+
     # plot data
     if multicore == 1:
-        plot_data_multicore(lru_map_lis, ship_map_lis, myrepl_map_lis, speedup)
+        plot_data_multicore(lru_map_lis, ship_map_lis, myrepl_map_lis, speedup, outfile)
     else:
-        plot_data(lru_map, ship_map, myrepl_map, speedup)
+        plot_data(lru_map, ship_map, myrepl_map, speedup, outfile)
+
+
+if __name__ == "__main__":
+    main()
+
 
