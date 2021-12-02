@@ -73,11 +73,11 @@ $ ./build_champsim.sh bimodal no no no no myrepl 4
 
 ```
 $ ./run_champsim.sh bimodal-no-no-no-no-lru-1core 1 10 soplex_205B.trace.xz
-$ ./run_champsim.sh bimodal-no-no-no-no-lru-1core 4 10 soplex_205B.trace.xz
+$ ./run_champsim.sh bimodal-no-no-no-no-lru-4core 4 10 0 bwaves_1609B.trace.xz bzip2_183B.trace.xz cactusADM_734B.trace.xz gamess_247B.trace.xz
 $ ./run_champsim.sh bimodal-no-no-no-no-ship-1core 1 10 soplex_205B.trace.xz
-$ ./run_champsim.sh bimodal-no-no-no-no-ship-1core 4 10 soplex_205B.trace.xz
+$ ./run_champsim.sh bimodal-no-no-no-no-ship-4core 4 10 0 bwaves_1609B.trace.xz bzip2_183B.trace.xz cactusADM_734B.trace.xz gamess_247B.trace.xz
 $ ./run_champsim.sh bimodal-no-no-no-no-myrepl-1core 1 10 soplex_205B.trace.xz
-$ ./run_champsim.sh bimodal-no-no-no-no-myrepl-1core 4 10 soplex_205B.trace.xz
+$ ./run_champsim.sh bimodal-no-no-no-no-myrepl-4core 4 10 0 bwaves_1609B.trace.xz bzip2_183B.trace.xz cactusADM_734B.trace.xz gamess_247B.trace.xz
 ```
 
 <p>
